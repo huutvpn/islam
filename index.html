@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Radio Dangdut Nonstop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:linear-gradient(160deg,#020617,#020617);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+.radio-box{
+    background:#020617;
+    padding:30px;
+    border-radius:22px;
+    text-align:center;
+    width:330px;
+    box-shadow:0 20px 40px rgba(0,0,0,.7);
+}
+h1{
+    font-size:22px;
+    margin-bottom:6px;
+}
+p{
+    font-size:14px;
+    color:#94a3b8;
+    margin-bottom:25px;
+}
+button{
+    background:#22c55e;
+    border:none;
+    padding:15px 30px;
+    font-size:16px;
+    border-radius:50px;
+    cursor:pointer;
+    font-weight:bold;
+}
+button.pause{
+    background:#ef4444;
+    color:white;
+}
+footer{
+    margin-top:18px;
+    font-size:12px;
+    color:#64748b;
+}
+</style>
+</head>
+
+<body>
+
+<div class="radio-box">
+    <h1>💃 Radio Dangdut Nonstop</h1>
+    <p>Dangdut • Koplo • Remix</p>
+
+    <button id="btn">▶ Play</button>
+
+    <footer>24 Jam Tanpa Henti</footer>
+</div>
+
+<script>
+let radio = null;
+const btn = document.getElementById("btn");
+
+// STREAM RADIO DANGDUT NONSTOP (STABIL)
+const streamURL = "https://stream.rcast.net/232847";
+
+btn.addEventListener("click", () => {
+
+    // BUAT AUDIO SETELAH KLIK (ANTI BLOKIR ANDROID)
+    if (!radio) {
+        radio = new Audio(streamURL);
+        radio.preload = "none";
+        radio.play();
+        btn.textContent = "⏸ Pause";
+        btn.classList.add("pause");
+        return;
+    }
+
+    // PLAY / PAUSE
+    if (radio.paused) {
+        radio.play();
+        btn.textContent = "⏸ Pause";
+        btn.classList.add("pause");
+    } else {
+        radio.pause();
+        btn.textContent = "▶ Play";
+        btn.classList.remove("pause");
+    }
+});
+</script>
+
+</body>
+</html>
