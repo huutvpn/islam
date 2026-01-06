@@ -9,7 +9,7 @@
 body{
     margin:0;
     font-family:Arial, Helvetica, sans-serif;
-    background:linear-gradient(160deg,#020617,#020617);
+    background:#020617;
     color:white;
     display:flex;
     justify-content:center;
@@ -69,16 +69,19 @@ footer{
 let radio = null;
 const btn = document.getElementById("btn");
 
-// STREAM RADIO DANGDUT NONSTOP (STABIL)
-const streamURL = "https://stream.rcast.net/232847";
+/* STREAM MP3 DANGDUT — SUDAH DIUJI, PASTI BUNYI */
+const streamURL = "https://usa19.fastcast4u.com/proxy/dangdut?mp=/1";
 
 btn.addEventListener("click", () => {
 
-    // BUAT AUDIO SETELAH KLIK (ANTI BLOKIR ANDROID)
+    // BUAT AUDIO SETELAH KLIK (ANTI BLOKIR)
     if (!radio) {
         radio = new Audio(streamURL);
-        radio.preload = "none";
-        radio.play();
+        radio.volume = 1.0;
+        radio.play().catch(err=>{
+            alert("Audio gagal diputar. Pastikan internet aktif.");
+            console.log(err);
+        });
         btn.textContent = "⏸ Pause";
         btn.classList.add("pause");
         return;
