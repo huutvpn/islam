@@ -1,104 +1,43 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<title>Radio Dangdut Nonstop</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:#020617;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-.radio-box{
-    background:#020617;
-    padding:30px;
-    border-radius:22px;
-    text-align:center;
-    width:330px;
-    box-shadow:0 20px 40px rgba(0,0,0,.7);
-}
-h1{
-    font-size:22px;
-    margin-bottom:6px;
-}
-p{
-    font-size:14px;
-    color:#94a3b8;
-    margin-bottom:25px;
-}
-button{
-    background:#22c55e;
-    border:none;
-    padding:15px 30px;
-    font-size:16px;
-    border-radius:50px;
-    cursor:pointer;
-    font-weight:bold;
-}
-button.pause{
-    background:#ef4444;
-    color:white;
-}
-footer{
-    margin-top:18px;
-    font-size:12px;
-    color:#64748b;
-}
-</style>
-</head>
+<!DOCTYPE html><html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kuis & Absensi PAI</title><link rel="stylesheet" href="style.css"></head>
+<body onload="init()">
+<div id="home" class="screen"><h3>Mulai Kuis</h3>
+<input id="name" placeholder="Nama siswa"><br>
+<select id="cls"></select><br>
+<button onclick="startQuiz()">Mulai</button>
+<button onclick="openAdmin()">Admin</button></div>
 
-<body>
+<div id="quiz" class="screen"><h3 id="qtext"></h3><div id="opts"></div>
+<button onclick="nextQ()">Next</button></div>
 
-<div class="radio-box">
-    <h1>💃 Radio Dangdut Nonstop</h1>
-    <p>Dangdut • Koplo • Remix</p>
+<div id="result" class="screen"><h3>Hasil</h3><div id="rmsg"></div>
+<button onclick="show('home')">Selesai</button></div>
 
-    <button id="btn">▶ Play</button>
+<div id="admin" class="screen"><h3>Admin Panel</h3>
+<button onclick="show('addSiswa')">Tambah Siswa</button>
+<button onclick="show('nilai')">Rekap Nilai</button>
+<button onclick="show('absen')">Rekap Absensi</button>
+<button onclick="nextDay()">Hari Berikutnya</button>
+<button onclick="resetAll()">Reset Semua</button>
+<button onclick="show('home')">Kembali</button></div>
 
-    <footer>24 Jam Tanpa Henti</footer>
-</div>
+<div id="addSiswa" class="screen"><h3>Tambah / Hapus Siswa</h3>
+<input id="newName" placeholder="Nama siswa"><br>
+<select id="newCls"></select><br>
+<button onclick="addS()">Tambah</button>
+<table id="tblStudent"><thead><tr><th>Nama</th><th>Kelas</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+<button onclick="show('admin')">Kembali</button></div>
 
-<script>
-let radio = null;
-const btn = document.getElementById("btn");
+<div id="nilai" class="screen"><h3>Rekap Nilai</h3>
+<table id="tNilai"><thead><tr><th>Nama</th><th>Kelas</th><th>Nilai</th><th>Waktu</th></tr></thead><tbody></tbody></table>
+<button onclick="show('admin')">Kembali</button></div>
 
-/* STREAM MP3 DANGDUT — SUDAH DIUJI, PASTI BUNYI */
-const streamURL = "https://usa19.fastcast4u.com/proxy/dangdut?mp=/1";
+<div id="absen" class="screen"><h3>Rekap Absensi Hari <span id="hnum"></span></h3>
+<select id="clsAbs" onchange="loadAbsen()"></select>
+<table id="tAbsen"><thead><tr><th>Nama</th></tr></thead><tbody></tbody></table>
+<button onclick="show('admin')">Kembali</button></div>
 
-btn.addEventListener("click", () => {
-
-    // BUAT AUDIO SETELAH KLIK (ANTI BLOKIR)
-    if (!radio) {
-        radio = new Audio(streamURL);
-        radio.volume = 1.0;
-        radio.play().catch(err=>{
-            alert("Audio gagal diputar. Pastikan internet aktif.");
-            console.log(err);
-        });
-        btn.textContent = "⏸ Pause";
-        btn.classList.add("pause");
-        return;
-    }
-
-    // PLAY / PAUSE
-    if (radio.paused) {
-        radio.play();
-        btn.textContent = "⏸ Pause";
-        btn.classList.add("pause");
-    } else {
-        radio.pause();
-        btn.textContent = "▶ Play";
-        btn.classList.remove("pause");
-    }
-});
-</script>
-
-</body>
-</html>
+<script src="script.js"></script>
+</body></html>
