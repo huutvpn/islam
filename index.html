@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis & Absensi PAI SD</title>
+<style>
+:root { --primary:#2E8B57; --light:#F0FFF0; --danger:#e74c3c; --white:#fff;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+body{background:var(--light);display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;}
+.app{background:var(--white);width:100%;max-width:900px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,.2);overflow:hidden;}
+header{background:var(--primary);color:#fff;padding:18px;text-align:center;font-weight:bold;font-size:1.2rem;}
+.screen{display:none;padding:20px;}
+.screen.active{display:block;}
+button{width:100%;padding:12px;font-weight:bold;color:#fff;background:var(--primary);border:none;border-radius:8px;margin-top:10px;cursor:pointer;}
+.btn-danger{background:var(--danger);}
+input,select{width:100%;padding:10px;border:2px solid #ccc;border-radius:8px;margin-top:5px;}
+.scrollBox{max-height:400px;overflow-y:auto;margin-top:10px;}
+table{border-collapse:collapse;margin-top:10px;font-size:.8rem;width:100%;}
+th,td{border:1px solid #bbb;padding:5px;text-align:center;}
+th{background:var(--primary);color:#fff;}
+.question-card{background:#fafafa;padding:15px;border-left:4px solid gold;margin:10px 0;border-radius:8px;}
+.option{border:2px solid #ccc;padding:10px;border-radius:8px;margin:8px 0;cursor:pointer;}
+.option.selected{background:var(--primary);color:#fff;border-color:var(--primary);}
+.score-circle{width:140px;height:140px;border-radius:50%;background:var(--primary);color:#fff;display:flex;justify-content:center;align-items:center;font-size:2.5rem;margin:15px auto;}
+.statusRow{display:flex;justify-content:space-between;align-items:center;border:1px solid #ccc;padding:8px;margin:5px 0;border-radius:6px;}
+.absenBtn{padding:6px 8px;margin:2px;color:#fff;border-radius:4px;cursor:pointer;font-size:.8rem;}
+.h{background:#2ecc71;} .i{background:#f1c40f;} .s{background:#3498db;} .a{background:#e74c3c;}
+</style>
+</head>
+
+<body>
+<div class="app">
+<header>KUIS & ABSENSI PAI SD</header>
+
+<!-- LOGIN -->
+<div id="login" class="screen active">
+<h3 style="text-align:center;">LOGIN</h3>
+<label>Nama</label>
+<input id="studentName">
+<label style="margin-top:8px;">Kelas</label>
+<select id="studentClass">
+<option disabled selected>Pilih Kelas</option>
+<option>3A</option><option>3B</option><option>4A</option><option>4B</option>
+</select>
+<small id="loginError" style="color:red;display:none;"></small>
+<button onclick="startQuiz()">Mulai Kuis</button>
+<button onclick="openAdmin()">Admin</button>
+<button id="musicBtn" onclick="toggleMusic()">Musik OFF</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<span id="progress"></span>
+<span id="timer" style="color:red;font-weight:bold;margin-right:10px;"></span>
+<span id="kelasTag" style="color:var(--primary);font-weight:bold;"></span>
+</div>
+<div class="question-card"><div id="questionText"></div></div>
+<div id="options"></div>
+<button id="nextBtn" onclick="nextQuestion()" disabled>Selanjutnya</button>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen">
+<h3 style="text-align:center;">Kuis Selesai!</h3>
+<h4 id="nameResult" style="text-align:center;"></h4>
+<div id="scoreBox" class="score-circle"></div>
+<button onclick="restart()">Kembali Awal</button>
+</div>
+
+<!-- ADMIN MENU -->
+<div id="menuAdmin" class="screen">
+<h3 style="text-align:center;">MENU ADMIN</h3>
+<button onclick="showScreen('inputNama')">Input Nama Siswa</button>
+<button onclick="loadAbsensi()">Input Absensi</button>
+<button onclick="loadRekapAbsensi()">Rekap Absensi</button>
+<button onclick="loadRekapNilai()">Rekap Nilai</button>
+<button onclick="exportNilai()">Export Nilai (Excel)</button>
+<button onclick="exportAbsensi()">Export Absensi (Excel)</button>
+<button onclick="toggleRepeatMode()">Mode Repeat: <span id="repeatStatus"></span></button>
+<button class="btn-danger" onclick="resetSemua()">Reset Semua Data</button>
+<button onclick="showScreen('login')">Kembali</button>
+</div>
+<!-- INPUT NAMA -->
+<div id="inputNama" class="screen">
+<h3 style="text-align:center;">INPUT NAMA</h3>
+<input id="namaInput" placeholder="Nama">
+<select id="kelasInput">
+<option disabled selected>Pilih Kelas</option>
+<option>3A</option><option>3B</option><option>4A</option><option>4B</option>
+</select>
+<button onclick="simpanNama()">Simpan Nama</button>
+<button onclick="showScreen('menuAdmin')">Kembali</button>
+<div class="scrollBox" id="listNamaBox"></div>
+</div>
+
+<!-- ABSENSI -->
+<div id="absenScreen" class="screen">
+<h3 style="text-align:center;">ABSENSI HARI <span id="hariSpan"></span></h3>
+<div class="scrollBox" id="absenWrapper"></div>
+<button onclick="hariBerikutnya()">Hari Berikutnya →</button>
+<button onclick="showScreen('menuAdmin')">Kembali</button>
+</div>
+
+<!-- REKAP ABSENSI -->
+<div id="rekapAbsenScreen" class="screen">
+<h3 style="text-align:center;">REKAP ABSENSI</h3>
+<div class="scrollBox" id="rekapAbsenWrapper"></div>
+<button onclick="showScreen('menuAdmin')">Kembali</button>
+</div>
+
+<!-- REKAP NILAI -->
+<div id="rekapNilaiScreen" class="screen">
+<h3 style="text-align:center;">REKAP NILAI</h3>
+<div class="scrollBox" id="rekapNilaiWrapper"></div>
+<button onclick="showScreen('menuAdmin')">Kembali</button>
+</div>
+
+</div> <!-- END .app -->
+
+<script>
+/* ================= BASE DATA ================= */
+let siswa = JSON.parse(localStorage.getItem("siswaPai") || "{}");
+let absensi = JSON.parse(localStorage.getItem("absensiPai") || "{}");
+let nilai = JSON.parse(localStorage.getItem("nilaiPai") || "[]");
+let hari = parseInt(localStorage.getItem("hariPai") || "1");
+
+/* MODE REPEAT */
+let repeatMode = localStorage.getItem("repeatMode") === "true";
+
+/* ================= TIMER ================= */
+let timeLeft = 300; // 5 menit
+let timerInterval = null;
+function startTimer(){
+  timeLeft = 300;
+  updateTimer();
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    updateTimer();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      finishQuiz();
+    }
+  },1000);
+}
+function updateTimer(){
+  const t=document.getElementById("timer");
+  if(!t) return;
+  let m=Math.floor(timeLeft/60), s=timeLeft%60;
+  t.innerText = m+":"+('0'+s).slice(-2);
+}
+/* ================= QUIZ DATA =================== */
+const pool3=[
+{q:"Bulan Ramadhan adalah bulan yang penuh?",opts:["Musibah","Berkah","Duka","Dosa"],a:1},
+{q:"Puasa Ramadhan hukumnya bagi Muslim yang mampu adalah?",opts:["Sunnah","Makruh","Wajib","Mubah"],a:2},
+{q:"Puasa dimulai saat terbit?",opts:["Matahari","Fajar/Subuh","Maghrib","Isya"],a:1},
+{q:"Puasa selesai saat?",opts:["Subuh","Dzuhur","Ashar","Maghrib"],a:3},
+{q:"Hari raya setelah Ramadhan adalah?",opts:["Idul Fitri","Idul Adha","Maulid Nabi","Tahun Baru"],a:0},
+{q:"Amalan yang dianjurkan di malam Ramadhan adalah?",opts:["Tarawih","Qurban","Wukuf","Sa'i"],a:0},
+{q:"Sholat tarawih dikerjakan setelah sholat?",opts:["Subuh","Dzuhur","Ashar","Isya"],a:3},
+{q:"Malam yang lebih baik dari seribu bulan disebut?",opts:["Nuzul Quran","Isra Mi'raj","Lailatul Qadar","Asyura"],a:2},
+{q:"Bulan Ramadhan adalah bulan turunnya?",opts:["Al-Qur'an","Zabur","Injil","Taurat"],a:0},
+{q:"Orang yang tidak boleh puasa di antaranya adalah?",opts:["Balita","Orang sakit","Orang sehat","Orang kuat"],a:1},
+{q:"Zakat fitrah dikeluarkan pada bulan?",opts:["Muharram","Ramadhan","Rabiul Awal","Syawal"],a:1},
+{q:"Zakat fitrah diberikan kepada?",opts:["Anak kecil","Orang kaya","Guru","Fakir miskin"],a:3},
+{q:"Berbuka puasa disunnahkan dengan?",opts:["Kurma","Kopi","Roti","Sayur"],a:0},
+{q:"Lafal yang dibaca saat berbuka puasa adalah?",opts:["Alhamdulillah","Bismillah","Doa berbuka","Takbir"],a:2},
+{q:"Waktu untuk niat puasa Ramadhan adalah?",opts:["Siang hari","Setelah Maghrib","Sebelum Subuh","Sore hari"],a:2},
+{q:"Puasa artinya menahan diri dari?",opts:["Makan dan minum","Tidur","Belajar","Bermain"],a:0},
+{q:"Rukun Islam yang keempat adalah?",opts:["Shalat","Puasa","Zakat","Haji"],a:1},
+{q:"Membaca Al-Qur'an pada bulan Ramadhan disebut?",opts:["Tadarus","Tawaf","Sa'i","Talbiyah"],a:0},
+{q:"Tarawih biasanya dikerjakan secara?",opts:["Berjamaah","Sendirian","Berlari","Bersiul"],a:0},
+{q:"Menahan amarah di bulan Ramadhan termasuk?",opts:["Adab puasa","Larangan puasa","Makruh puasa","Sunnah haji"],a:0},
+{q:"Salah satu persiapan menyambut Ramadhan adalah?",opts:["Bersedih","Bertengkar","Membersihkan hati","Mengeluh"],a:2},
+{q:"Berpuasa melatih kita menjadi anak yang?",opts:["Sompral","Sabar","Malas","Nakal"],a:1},
+{q:"Tanggal 1 Syawal dirayakan sebagai?",opts:["Hari Raya Idul Fitri","Tahun Baru","Hari Jumat","Hari Ahad"],a:0},
+{q:"Makan sahur dilakukan pada waktu?",opts:["Malam hari","Setelah Subuh","Sebelum Subuh","Siang hari"],a:2},
+{q:"Tidak membatalkan puasa salah satunya adalah?",opts:["Muntah sengaja","Marah","Makan","Minum"],a:1},
+{q:"Manfaat Ramadhan bagi seorang Muslim adalah?",opts:["Banyak dosa","Menambah iman","Menambah malas","Mengurangi ibadah"],a:1},
+{q:"Ramadhan adalah kesempatan untuk?",opts:["Berkurang pahala","Meningkatkan ibadah","Bolos sekolah","Tidur sepanjang hari"],a:1},
+{q:"Anak yang belum balig hukumnya puasa adalah?",opts:["Wajib","Sunnah","Makruh","Haram"],a:1},
+{q:"Ramadhan adalah tamu yang harus disambut dengan?",opts:["Marah","Syukur","Sedih","Bosan"],a:1},
+{q:"Mencari Lailatul Qadar dilakukan pada malam-malam?",opts:["Genap","Ganjil","Sembarang","Jumat saja"],a:1},
+];
+
+const pool4=[
+{q:"Balig artinya adalah mencapai usia?",opts:["Kecil","Tanggung jawab","Lanjut usia","Anak-anak"],a:1},
+{q:"Balig pada anak laki-laki ditandai dengan?",opts:["Haidh","Mimpi basah","Botak","Tertidur"],a:1},
+{q:"Balig pada anak perempuan ditandai dengan?",opts:["Haidh","Sunat","Mimpi","Tidur"],a:0},
+{q:"Setelah balig seorang Muslim wajib?",opts:["Shalat","Tidur","Main","Bolos"],a:0},
+{q:"Usia balig biasanya sekitar umur?",opts:["1-2 tahun","5-7 tahun","9-15 tahun","20-30 tahun"],a:2},
+{q:"Tanda balig lainnya adalah mulai tumbuh?",opts:["Sayap","Bulu halus","Batu","Sisik"],a:1},
+{q:"Balig membuat seseorang wajib berpuasa di bulan?",opts:["Rajab","Ramadhan","Dzulhijjah","Syawal"],a:1},
+{q:"Hijrah Nabi Muhammad dari kota?",opts:["Madinah ke Mekkah","Mekkah ke Madinah","Iraq ke Syam","Taif ke Yaman"],a:1},
+{q:"Hijrah terjadi pada tahun ke-?",opts:["1 Hijriyah","10 Hijriyah","2 Hijriyah","100 Hijriyah"],a:0},
+{q:"Hijrah menandai awal penanggalan?",opts:["Qamariyah","Masehi","Hijriyah","Jawa"],a:2},
+{q:"Hijrah dilakukan untuk mencari?",opts:["Mainan","Baju baru","Perlindungan & dakwah","Liburan"],a:2},
+{q:"Yang menemani Nabi saat hijrah adalah?",opts:["Abu Bakar","Umar","Usman","Ali"],a:0},
+{q:"Kota tujuan hijrah adalah?",opts:["Mesir","Madinah","Turki","Syam"],a:1},
+{q:"Nama gua tempat bersembunyi saat hijrah adalah?",opts:["Gua Tsur","Gua Hira","Gua Kahf","Gua Batu"],a:0},
+{q:"Setelah hijrah Nabi membangun?",opts:["Bank","Masjid Nabawi","Mall","Sekolah umum"],a:1},
+{q:"Hijrah mengajarkan sikap?",opts:["Pemalas","Berani & sabar","Penakut","Pembohong"],a:1},
+{q:"Terbentuknya masyarakat Islam pertama terjadi di?",opts:["Mekkah","Madinah","Yaman","Syam"],a:1},
+{q:"Orang yang pertama menyambut Nabi di Madinah adalah?",opts:["Kaum Muhajirin","Kaum Anshar","Kaum Quraisy","Kaum Turki"],a:1},
+{q:"Muhajirin adalah sahabat yang?",opts:["Tinggal di Madinah","Hijrah dari Mekkah","Tinggal di Iraq","Tinggal di Mesir"],a:1},
+{q:"Anshar adalah sahabat yang?",opts:["Hijrah dari Mekkah","Menyambut di Madinah","Hijrah ke Syam","Tinggal di Taif"],a:1},
+{q:"Salah satu hikmah hijrah adalah?",opts:["Bertambah musuh","Islam berkembang","Masjid dilarang","Dakwah gagal"],a:1},
+{q:"Balig menjadikan ibadah seseorang menjadi?",opts:["Batal","Wajib","Tidak sah","Sunnah"],a:1},
+{q:"Haidh terjadi pada anak perempuan ketika masuk masa?",opts:["Balita","Balig","Lansia","Bayi"],a:1},
+{q:"Mimpi basah pada laki-laki menandakan?",opts:["Balig","Sakit","Sedih","Lelah"],a:0},
+{q:"Awal tahun Hijriyah dimulai dari peristiwa?",opts:["Lahir Nabi","Isra Mi'raj","Hijrah Nabi","Wafat Nabi"],a:2},
+{q:"Setelah hijrah umat Islam dapat shalat secara?",opts:["Sembunyi","Berjamaah","Dilarang","Sembarangan"],a:1},
+{q:"Hijrah menunjukkan bahwa dalam dakwah harus?",opts:["Lemah","Sabar & bijak","Marah","Menyerah"],a:1},
+{q:"Balig membuat seseorang mulai memikul?",opts:["Ransel","Amanah & taklif","Tas sekolah","Makanan"],a:1},
+{q:"Setelah balig meninggalkan shalat hukumnya?",opts:["Boleh","Makruh","Haram","Mubah"],a:2},
+{q:"Madinah dulunya bernama?",opts:["Yasrib","Baghdad","Syam","Taif"],a:0},
+];
+/* ================= QUIZ ENGINE ================= */
+let current=[],index=0,score=0,student="",kelas="";
+const synth=window.speechSynthesis;
+
+/* Acak array */
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuiz(){
+  let n=document.getElementById("studentName").value.trim();
+  let k=document.getElementById("studentClass").value;
+  let err=document.getElementById("loginError");
+
+  if(!n || !k){
+    err.innerText="Lengkapi data!";
+    err.style.display="block";
+    return;
+  }
+
+  if(!repeatMode && nilai.some(x=>x.name==n && x.class==k)){
+    err.innerText="Sudah mengerjakan!";
+    err.style.display="block";
+    return;
+  }
+
+  student=n;
+  kelas=k;
+  document.getElementById("kelasTag").innerText="Kelas "+k;
+
+  /* Absensi otomatis */
+  if(!siswa[k]) siswa[k]=[];
+  if(!siswa[k].includes(n)) siswa[k].push(n);
+  if(!absensi[k]) absensi[k]={};
+  if(!absensi[k][n]) absensi[k][n]=Array(30).fill("");
+  absensi[k][n][hari-1]="H";
+  saveAll();
+
+  /* Ambil soal + acak + ambil 10 */
+  const pool=(k=="3A"||k=="3B")?pool3:pool4;
+  current = shuffle([...pool]).slice(0,10);
+
+  index=0;
+  score=0;
+
+  startTimer();
+  showQuestion();
+  showScreen('quiz');
+}
+
+function showQuestion(){
+  const q=current[index];
+
+  document.getElementById("progress").innerText=`Soal ${index+1}/${current.length}`;
+  document.getElementById("questionText").innerText=q.q;
+  speak(q.q);
+
+  let opt=document.getElementById("options");
+  opt.innerHTML="";
+  document.getElementById("nextBtn").disabled=true;
+
+  /* Acak jawaban */
+  let ops = q.opts.map((t,i)=>({text:t, idx:i}));
+  shuffle(ops);
+
+  ops.forEach(o=>{
+    let d=document.createElement("div");
+    d.className="option";
+    d.innerText=o.text;
+    d.onclick=()=>select(o.idx,d);
+    opt.appendChild(d);
+  });
+}
+
+function select(i,el){
+  document.querySelectorAll(".option").forEach(e=>e.classList.remove("selected"));
+  el.classList.add("selected");
+  el.setAttribute("data-choice",i);
+  document.getElementById("nextBtn").disabled=false;
+}
+
+function nextQuestion(){
+  let c=document.querySelector(".option.selected").getAttribute("data-choice");
+  if(c==current[index].a) score+=10;
+  index++;
+  if(index<current.length) showQuestion();
+  else finishQuiz();
+}
+
+function finishQuiz(){
+  clearInterval(timerInterval);
+
+  nilai.push({
+    name:student,
+    class:kelas,
+    score:score,
+    time:new Date().toLocaleString("id-ID")
+  });
+
+  saveAll();
+  document.getElementById("nameResult").innerText=student+" ("+kelas+")";
+  document.getElementById("scoreBox").innerText=score;
+  showScreen('result');
+}
+
+function speak(t){
+  synth.cancel();
+  let u=new SpeechSynthesisUtterance(t);
+  u.lang="id-ID";
+  u.rate=0.9;
+  synth.speak(u);
+}
+/* ================= ADMIN ================= */
+function openAdmin(){
+  let p=prompt("Sandi Admin:");
+  if(p=="040698") showScreen('menuAdmin');
+  else alert("Sandi Salah!");
+}
+
+/* ================= INPUT NAMA ================= */
+function simpanNama(){
+  let nama=document.getElementById("namaInput").value.trim();
+  let k=document.getElementById("kelasInput").value;
+  if(!nama||!k){alert("Lengkapi!");return;}
+  if(!siswa[k]) siswa[k]=[];
+  if(!siswa[k].includes(nama)) siswa[k].push(nama);
+  if(!absensi[k]) absensi[k]={};
+  if(!absensi[k][nama]) absensi[k][nama]=Array(30).fill("");
+  saveAll();
+  loadListNama();
+  document.getElementById("namaInput").value="";
+  document.getElementById("kelasInput").value="";
+}
+
+function loadListNama(){
+  let box=document.getElementById("listNamaBox");
+  box.innerHTML="";
+  for(let k in siswa){
+    box.innerHTML+=`<b>${k}</b><br>`;
+    siswa[k].forEach(n=>box.innerHTML+=`• ${n}<br>`);
+    box.innerHTML+="<br>";
+  }
+}
+
+/* ================= ABSENSI ================= */
+function loadAbsensi(){
+  if(Object.keys(siswa).length===0){alert("Belum ada siswa!");return;}
+  document.getElementById("hariSpan").innerText=hari;
+  let w=document.getElementById("absenWrapper");
+  w.innerHTML="";
+  for(let k in siswa){
+    w.innerHTML+=`<h3 style="color:var(--primary);">${k}</h3>`;
+    siswa[k].forEach(n=>{
+      w.innerHTML+=`
+      <div class="statusRow">
+      ${n}
+      <div>
+      <button class="absenBtn h" onclick="setStat('${k}','${n}','H')">H</button>
+      <button class="absenBtn i" onclick="setStat('${k}','${n}','I')">I</button>
+      <button class="absenBtn s" onclick="setStat('${k}','${n}','S')">S</button>
+      <button class="absenBtn a" onclick="setStat('${k}','${n}','A')">A</button>
+      </div>
+      ${absensi[k][n][hari-1]||'-'}
+      </div>`;
+    });
+  }
+  showScreen('absenScreen');
+}
+
+function setStat(k,n,s){
+  absensi[k][n][hari-1]=s;
+  saveAll();
+  loadAbsensi();
+}
+
+function hariBerikutnya(){
+  if(hari<30){hari++;saveAll();loadAbsensi();}
+  else alert("30 hari selesai!");
+}
+
+/* ================= REKAP ABSENSI ================= */
+function loadRekapAbsensi(){
+  let w=document.getElementById("rekapAbsenWrapper");
+  w.innerHTML="";
+  for(let k in siswa){
+    w.innerHTML+=`<h3 style="color:var(--primary);">${k}</h3>`;
+    let html=`<div style="overflow-x:auto;"><table><thead><tr><th>Nama</th>`;
+    for(let i=1;i<=30;i++) html+=`<th>${i}</th>`;
+    html+=`</tr></thead><tbody>`;
+    siswa[k].forEach(n=>{
+      html+=`<tr><td>${n}</td>`;
+      absensi[k][n].forEach(v=>html+=`<td>${v||'-'}</td>`);
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table></div>`;
+    w.innerHTML+=html;
+  }
+  showScreen('rekapAbsenScreen');
+}
+
+/* ================= REKAP NILAI ================= */
+function loadRekapNilai(){
+  let w=document.getElementById("rekapNilaiWrapper");
+  w.innerHTML="";
+  ["3A","3B","4A","4B"].forEach(k=>{
+    let f=nilai.filter(x=>x.class==k);
+    if(!f.length) return;
+
+    let maxScore = Math.max(...f.map(x=>x.score));
+    w.innerHTML+=`<h3 style="color:var(--primary);">${k}</h3>`;
+    w.innerHTML+=`<div>Highscore kelas: <b>${maxScore}</b></div>`;
+
+    let html=`<table><thead><tr><th>No</th><th>Nama</th><th>Nilai</th><th>Waktu</th></tr></thead><tbody>`;
+    f.forEach((x,i)=>html+=`<tr><td>${i+1}</td><td>${x.name}</td><td>${x.score}</td><td>${x.time}</td></tr>`);
+    html+=`</tbody></table>`;
+    w.innerHTML+=html;
+  });
+  showScreen('rekapNilaiScreen');
+}
+
+/* ================= EXPORT ================= */
+function exportNilai(){
+  let rows = ["Nama,Kelas,Nilai,Waktu"];
+  nilai.forEach(n=>rows.push(`${n.name},${n.class},${n.score},${n.time}`));
+  downloadCSV(rows.join("\\n"),"nilai.csv");
+}
+
+function exportAbsensi(){
+  let rows = ["Kelas,Nama,"+Array.from({length:30},(_,i)=>"H"+(i+1)).join(",")];
+  for(let k in absensi){
+    for(let n in absensi[k]){
+      rows.push([k,n,...absensi[k][n]].join(","));
+    }
+  }
+  downloadCSV(rows.join("\\n"),"absensi.csv");
+}
+
+function downloadCSV(content,filename){
+  const blob = new Blob([content],{type:"text/csv"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ================= MODE REPEAT ================= */
+function toggleRepeatMode(){
+  repeatMode = !repeatMode;
+  localStorage.setItem("repeatMode", repeatMode);
+  const rs = document.getElementById("repeatStatus");
+  if(rs) rs.innerText = repeatMode ? "ON" : "OFF";
+  alert("Mode Repeat sekarang: " + (repeatMode ? "ON" : "OFF"));
+}
+
+/* ================= MUSIK ================= */
+function toggleMusic(){
+  const p = document.getElementById('bgm');
+  const btn = document.getElementById('musicBtn');
+  if(p.paused){
+    p.play();
+    btn.innerText = "Musik ON";
+  } else {
+    p.pause();
+    btn.innerText = "Musik OFF";
+  }
+}
+
+/* ================= UTIL ================= */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function saveAll(){
+  localStorage.setItem("siswaPai",JSON.stringify(siswa));
+  localStorage.setItem("absensiPai",JSON.stringify(absensi));
+  localStorage.setItem("nilaiPai",JSON.stringify(nilai));
+  localStorage.setItem("hariPai",hari);
+}
+function restart(){location.reload();}
+function resetSemua(){
+  if(confirm("Reset semua?")){
+    localStorage.clear();
+    siswa={};absensi={};nilai=[];hari=1;
+    alert("Sudah direset!");
+  }
+}
+
+window.addEventListener("DOMContentLoaded",()=>{
+  const rs = document.getElementById("repeatStatus");
+  if(rs) rs.innerText = repeatMode ? "ON" : "OFF";
+});
+</script>
+
+<audio id="bgm" src="ala.mp3" preload="auto"></audio>
+
+</body>
+</html>
